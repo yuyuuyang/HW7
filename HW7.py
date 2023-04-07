@@ -130,8 +130,8 @@ def birthyear_nationality_search(age, country, cur, conn):
 
 def position_birth_search(position, age, cur, conn):
     player_list = []
-    age_limit = 2023 - age
-    cur.execute('SELECT Players.name, Positions.position, Players.birthyear FROM Players JOIN Positions ON Players.position_id = Positions.id WHERE Positions.position = ? AND Players.birthyear > ?', (position, age_limit))
+    lim_age = 2023 - age
+    cur.execute('SELECT Players.name, Positions.position, Players.birthyear FROM Players JOIN Positions ON Players.position_id = Positions.id WHERE Positions.position = ? AND Players.birthyear > ?', (position, lim_age))
     for row in cur:
         player_list.append(row)
         
