@@ -62,9 +62,13 @@ def make_players_table(data, cur, conn):
         birthyear = player['dateOfBirth'][:4]
         nationality = player['nationality']
 
-        cur.execute("SELECT DISTINCT Positions.id FROM Positions WHERE Positions.position = ?",  (position,))
+        select_position_id_query = " SELECT id FROM Positions WHERE position = ? "
+        cur.execute(select_position_id_query, (position,))
+    
+        insert_player_query = "INSERT OR IGNORE INTO Players (id, name, position_id, birthyear, nationality) VALUES (?, ?, ?, ?, ?)"
         position_id = cur.fetchone()[0]
-        cur.execute("INSERT OR IGNORE INTO Players (id, name, position_id, birthyear, nationality) VALUES (?, ?, ?, ?, ?)", (id, name, position_id, birthyear, nationality))
+
+        cur.execute(insert_player_query, (id, name, position_id, birthyear, nationality))
     conn.commit()
     conn.close()
     
@@ -82,10 +86,11 @@ def make_players_table(data, cur, conn):
 def nationality_search(countries, cur, conn):
     player_lst = []
     for country in countries:
-        cur.execute('SELECT name, position_id, nationality FROM Players WHERE Players.nationality = ?', [country])
+        cur.execute("SELECT name, position_id, nationality FROM Players WHERE Players.nationality = ? ", [country])
         lst = cur.fetchall()
         for player in lst:
             player_lst.append(player)
+
     return player_lst
 
 
@@ -107,9 +112,10 @@ def nationality_search(countries, cur, conn):
 
 def birthyear_nationality_search(age, country, cur, conn):
     age_limit = 2023 - age
-    cur.execute("SELECT name, nationality, birthyear FROM Players Where nationality = ? AND birthyear <= ?", (country, age_limit))
+    cur.execute("SELECT name, nationality, birthyear FROM Players WHERE nationality = ? AND birthyear <= ?", (country, age_limit))
     lst = cur.fetchall()
     return lst
+
 
 ## [TASK 4]: 15 points
 # finish the function position_birth_search
@@ -129,13 +135,16 @@ def birthyear_nationality_search(age, country, cur, conn):
     # HINT: You'll have to use JOIN for this task.
 
 def position_birth_search(position, age, cur, conn):
-    player_list = []
     lim_age = 2023 - age
-    cur.execute('SELECT Players.name, Positions.position, Players.birthyear FROM Players JOIN Positions ON Players.position_id = Positions.id WHERE Positions.position = ? AND Players.birthyear > ?', (position, lim_age))
-    for row in cur:
-        player_list.append(row)
+    player_list = []
+    cur.execute('SELECT name, position, birthyear FROM Players JOIN Positions ON Players.position_id = Positions.id WHERE Positions.position = ? AND birthyear > ?', (position, lim_age))
+    for x in cur:
+        player_list.append(x)
         
     return player_list
+
+
+
 
 
 # [EXTRA CREDIT]
