@@ -59,15 +59,15 @@ def make_players_table(data, cur, conn):
         id = player['id']
         name = player['name']
         position = player['position']
-        birthyear = int(player['dateOfBirth'][:4])
+        birthyear = player['dateOfBirth'][:4]
         nationality = player['nationality']
 
-        positionid = cur.execute('SELECT id FROM Positions WHERE Positions.position = ?', [position]).fetchone()[0]
-        cur.execute("INSERT OR IGNORE INTO Players VALUES (?,?,?,?,?)", (id, name, position, birthyear, nationality))
-
-
-
+        cur.execute("SELECT DISTINCT Positions.id FROM Positions WHERE Positions.position = ?",  (position,))
+        position_id = cur.fetchone()[0]
+        cur.execute("INSERT OR IGNORE INTO Players (id, name, position_id, birthyear, nationality) VALUES (?, ?, ?, ?, ?)", (id, name, position_id, birthyear, nationality))
     conn.commit()
+    conn.close()
+    
 
 ## [TASK 2]: 10 points
 # Finish the function nationality_search
@@ -84,10 +84,9 @@ def nationality_search(countries, cur, conn):
     for country in countries:
         cur.execute('SELECT name, position_id, nationality FROM Players WHERE Players.nationality = ?', [country])
         lst = cur.fetchall()
-        player_lst += lst
+        for player in lst:
+            player_lst.append(player)
     return player_lst
-
-
 
 
 ## [TASK 3]: 10 points
@@ -131,8 +130,8 @@ def birthyear_nationality_search(age, country, cur, conn):
 
 def position_birth_search(position, age, cur, conn):
     player_list = []
-    min_year = 2023 - age
-    cur.execute('SELECT Players.name, Positions.position, Players.birthyear FROM Players JOIN Positions ON Players.position_id = Positions.id WHERE Positions.position = ? AND Players.birthyear > ?', (position, min_year))
+    age_limit = 2023 - age
+    cur.execute('SELECT Players.name, Positions.position, Players.birthyear FROM Players JOIN Positions ON Players.position_id = Positions.id WHERE Positions.position = ? AND Players.birthyear > ?', (position, age_limit))
     for row in cur:
         player_list.append(row)
         
